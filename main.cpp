@@ -72,15 +72,16 @@ public:
 };
 
 //Declaring the functions
-void addConsole(BNode* &root);
-void addFile(BNode* &root);
-void add(BNode* root, int data);
+void addConsole(BNode* &root, bool &LL, bool &RR, bool &LR, bool &RL);
+void addFile(BNode* &root, bool &LL, bool &RR, bool &LR, bool &RL);
+void add(BNode* root, int data, bool &LL, bool &RR, bool &LR, bool &RL);
 void printTree(BNode* root,  int count);
 int search(BNode* root, int searchNum);
-//void deleteOne(BNode* tree, BNode* previous, int deleteNum, int root);
 BNode* deleteOne(BNode* root, int deleteNum);
 BNode* nextValue(BNode* root);
-void checkTree(BNode* root);
+BNode* checkTree(BNode* &root, int data, bool &isRedRed, bool &LL, bool &RR, bool &LR, bool &RL);
+//BNode* checkTree(BNode* root, int data, bool isRedRed,
+//	       bool &LL, bool &RR, bool &LR, bool &RL);
 BNode* rotateLeft(BNode* node);
 BNode* rotateRight(BNode* node);
 
@@ -90,6 +91,10 @@ int main() {
   char command[15];
   char fileType[10];
   bool running = true;
+  bool LL = false;
+  bool RR = false;
+  bool LR = false;
+  bool RL = false;
 
   //Ask the user for a command
   cout << "Enter a command (enter add, search, delete, print, or quit)" << endl;
@@ -112,10 +117,10 @@ int main() {
 
       //Ask the user if they want to add from the console or a file
       if(strcmp(fileType, "CONSOLE") == false){
-	addConsole(root);
+	addConsole(root, LL, RR, LR, RL);
       }
       else if(strcmp(fileType, "FILE") == false){
-	addFile(root);
+	addFile(root, LL, RR, LR, RL);
       }
       else{
 	cout << "Not a valid file type" << endl;
@@ -155,7 +160,7 @@ int main() {
       //Print the whole tree
       printTree(root, 0);
       cout << "Enter a command (enter add, search, delete, print, or quit)" << endl;
-      root=rotateRight(root);
+      //root=rotateRight(root);
     }
     else if(strcmp(command, "QUIT") == false){
       running = false;
@@ -169,7 +174,7 @@ int main() {
 }
 
 //Function to take an input from a file
-void addFile(BNode* &root){
+void addFile(BNode* &root, bool &LL, bool &RR, bool &LR, bool &RL){
   char* fileName = new char[20];
 
   //Ask the user to enter the file name
@@ -181,20 +186,20 @@ void addFile(BNode* &root){
   //Extract numbers from the file
   int input = 0;
   while(file >> input){
-    add(root, input);
+    add(root, input, LL, RR, LR, RL);
   }
   file.close();
 }
 
 //Function to take an input from the console
-void addConsole(BNode* &root){
+void addConsole(BNode* &root, bool &LL, bool &RR, bool &LR, bool &RL){
   bool entering = true;
   int input;
 
   //Ask the user for numbers or the word "done"
   cout << "Enter a number (1-999) or enter \"done\"" << endl;
   cin >> input;
-  add(root, input);
+  add(root, input, LL, RR, LR, RL);
   /*
   //Keep asking for input until the user enters "done"
   while(entering){
@@ -228,44 +233,119 @@ void addConsole(BNode* &root){
     }*/
 }
 
-
 //Function to add into the tree
-void add(BNode* root, int data){
+void add(BNode* root, int data, bool &LL, bool &RR, bool &LR, bool &RL){
   //Check if you are adding at the root
   if(root->getData() == -1) {
     root->setData(data);
+    root->setColor('B');
     return;
   }
   else {
+    bool isRedRed = false;
     //Check if the new node should go to the right or left
     //If to the left, check if it is at the base of the tree
     if(data < root->getData() && root->getLeft()){
       root = root->getLeft();
-      add(root, data);
+      add(root, data, LL, RR, LR, RL);
     }
     //Add the new node
     else if(data < root->getData() && !root->getLeft()){
       BNode* newNode = new BNode(data);
       root->setLeft(newNode);
+      root->getLeft()->setParent(root);
+      //Check if the parent and child are both red
+      if(root->getData() != -1)
+	if(root->getColor() == 'R' && root->getLeft()->getColor() == 'R')
+	  isRedRed = true;
       return;
     }
 
     //If to the right, check if it is at the base of the tree
     if(data > root->getData() && root->getRight()){
       root = root->getRight();
-      add(root, data);
+      add(root, data, LL, RR, LR, RL);
     }
     //Add the new node
     else if(data > root->getData() && !root->getRight()){
       BNode* newNode = new BNode(data);
       root->setRight(newNode);
+      root->getRight()->setParent(root);
+      if(root->getData() != -1)
+        if(root->getColor() == 'R' && root->getRight()->getColor() == 'R')
+          isRedRed = true;
       return;
     }
+
+    root = checkTree(root, data, isRedRed, LL, RR, LR, RL);
   }
 }
 
-void checkTree(BNode* root) {
-  
+BNode* checkTree(BNode* &root, int data, bool &isRedRed, bool &LL, bool &RR, bool &LR, bool &RL) {
+  if(LL){ //Left Rotation
+    root = rotateLeft(root);
+    root->setColor('B');
+    root->getLeft()->setColor('R');
+    LL = false;
+  }
+  else if(RR){ //Right Rotation
+    root = rotateRight(root);
+    root->setColor('B');
+    root->getRight()->setColor('R');
+    RR = false;
+  }
+  else if(LR){ //Left and then Right Rotation
+    root->setLeft(rotateRight(root->getLeft()));
+    root->getLeft()->setParent(root);
+    root->setRight(root);
+    root->setColor('B');
+    root->getRight()->setColor('R');
+    LR = false;
+  }
+  else if(RL){ //Right and then Left Rotation
+    root->setRight(rotateRight(root->getRight()));
+    root->getRight()->setParent(root);
+    root->setLeft(root);
+    root->setColor('B');
+    root->getLeft()->setColor('R');
+    RL = false;
+  }
+
+  if(isRedRed){
+    if(root->getParent()->getRight() == root){ //Check if on the right
+      if(!root->getParent()->getLeft() ||
+	 root->getParent()->getLeft()->getColor() == 'B'){ //If there are two black children
+	if(root->getRight() && root->getRight()->getColor() == 'R')
+	  LL = true;
+	else if(root->getLeft() && root->getLeft()->getColor() == 'R')
+	  RL = true;
+      }
+      else{ //If the uncle is red
+	root->getParent()->getLeft()->setColor('B');
+	root->setColor('B');
+	if(root->getParent() != root)
+	  root->getParent()->setColor('R');
+      }
+    }
+
+    else{
+      if(!root->getParent()->getRight() ||
+         root->getParent()->getRight()->getColor() == 'B'){ //If there are two black children    
+        if(root->getLeft() && root->getLeft()->getColor() == 'R')
+          RR = true;
+        else if(root->getRight() && root->getRight()->getColor() == 'R')
+          LR = true;
+      }
+      else{ //If the uncle is red
+        root->getParent()->getRight()->setColor('B');
+        root->setColor('B');
+        if(root->getParent() != root)
+          root->getParent()->setColor('R');
+      }
+    }
+    isRedRed = false;
+  }
+  return root;
 }
 
 //Function to print out the binary search tree
@@ -284,7 +364,7 @@ void printTree(BNode* root, int count) {
   for(int i=0; i<count; i++){
     cout << "\t";
   }
-  cout << root->getData() << endl;
+  cout << root->getData() << " " << root->getColor() << endl;
 
   //Go through the left side of the tree
   if(root->getLeft())
