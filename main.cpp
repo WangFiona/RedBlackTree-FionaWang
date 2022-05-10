@@ -87,9 +87,6 @@ int search(BNode* root, int searchNum);
 BNode* deleteOne(BNode* root, int deleteNum);
 BNode* nextValue(BNode* root);
 void checkTree(BNode* &root, BNode* &node);
-//BNode* checkTree(BNode* &root, int data, bool &isRedRed, bool &LL, bool &RR, bool &LR, bool &RL);
-//BNode* checkTree(BNode* root, int data, bool isRedRed,
-//	       bool &LL, bool &RR, bool &LR, bool &RL);
 void rotateLeft(BNode* &root, BNode* &node);
 void rotateRight(BNode* &root, BNode* &node);
 
@@ -213,51 +210,14 @@ void addConsole(BNode* &root, bool &LL, bool &RR, bool &LR, bool &RL){
   BNode* current = new BNode;
   current = add(root, input, LL, RR, LR, RL);
   checkTree(root, current);
-  /*
-  //Keep asking for input until the user enters "done"
-  while(entering){
-    cin >> input;
-    //Allow both upper and lower case
-    for(int i=0; i < strlen(input); i++) {
-      input[i] = toupper(input[i]);
-    }
-
-    //Check if the input is a number or "done"
-    bool isNum = true;
-    for(int i=0; i<strlen(input); i++){
-      if(!isdigit(input[i])){
-	isNum = false;
-      }
-    }
-
-    //If the user is done, leave the loop
-    if(strcmp(input, "DONE") == false){
-      entering = false;
-    }
-    //Keep asking for numbers
-    else if(!isNum){
-      cout << "Enter a number (1-999) or enter \"done\"" << endl;
-    }
-    else{
-      int num = atoi(input);
-      add(tree, num);
-      cout << "Enter a number (1-999) or enter \"done\"" << endl;
-    }
-    }*/
 }
 
 //Function to add into the tree
 BNode* add(BNode* &root, int data, bool &LL, bool &RR, bool &LR, bool &RL){
   //Check if you are adding at the root
   if(root==NULL) {
-    //cout << "root" << endl;
     BNode* newRoot = new BNode(data);
     root = newRoot;
-    //cout << newRoot->getData() << endl;
-    //root->setData(data);
-    //root->setColor('B');
-    //if(!root)
-    //cout << "false" << endl;
     return root;
   }
   else {
@@ -274,15 +234,6 @@ BNode* add(BNode* &root, int data, bool &LL, bool &RR, bool &LR, bool &RL){
       root->setLeft(newNode);
       newNode->setParent(root);
       return newNode;
-      //Check if the parent and child are both red
-      //if(root->getData() != -1){
-      /*if(root->getColor() == 'R' && root->getLeft()->getColor() == 'R'){
-	cout << "isRedRed" << endl;
-	isRedRed = true;
-	cout << isRedRed << endl;
-	}*/
-	//}
-      //return;
     }
 
     //If to the right, check if it is at the base of the tree
@@ -296,19 +247,7 @@ BNode* add(BNode* &root, int data, bool &LL, bool &RR, bool &LR, bool &RL){
       root->setRight(newNode);
       newNode->setParent(root);
       return newNode;
-      //if(root->getData() != -1){
-      /*if(root->getColor() == 'R' && root->getRight()->getColor() == 'R'){
-	cout << "isRedRed" << endl;
-	isRedRed = true;
-	cout << isRedRed << endl;
-	}*/
-	//}
-	//return;
     }
-    //return NULL;
-
-    //cout << isRedRed << LL << RR << LR << RL << endl;
-    //root = checkTree(root, data, isRedRed, LL, RR, LR, RL);
   }
   return NULL;
 }
@@ -317,9 +256,7 @@ void checkTree(BNode* &root, BNode* &node){
   BNode* parent = NULL;
   BNode* grandpa = NULL;
   BNode* uncle = NULL;
-  //printTree(root, 0);
-  //cout << endl;
-  //cout << node->getData() << endl;
+  
   while((node != root) && (node->getColor() == 'R') && (node->getParent()->getColor() == 'R')) {
     parent = node->getParent();
     grandpa = node->getParent()->getParent();
@@ -363,89 +300,9 @@ void checkTree(BNode* &root, BNode* &node){
         node = parent;
       }
     }
-    //printTree(root, 0);
   }
   root->setColor('B');
 }
-
-/*BNode* checkTree(BNode* &root, int data, bool &isRedRed, bool &LL, bool &RR, bool &LR, bool &RL) {
-  cout << "check tree" << endl;
-  if(root==NULL){
-    cout << "checktreeroot" << endl;
-    return root;
-  }
-  if(LL){ //Left Rotation
-    cout << "LL" << endl;
-    root=rotateLeft(root, root);
-    root->setColor('B');
-    root->getLeft()->setColor('R');
-    LL = false;
-  }
-  else if(RR){ //Right Rotation
-    cout << "RR" << endl;
-    root=rotateRight(root, root);
-    root->setColor('B');
-    root->getRight()->setColor('R');
-    RR = false;
-  }
-  else if(LR){ //Left and then Right Rotation
-    cout << "LR" << endl;
-    BNode* left = root->getLeft();
-    root->setLeft(rotateLeft(left, root));
-    root->getLeft()->setParent(root);
-    root->setRight(root);
-    root->setColor('B');
-    root->getRight()->setColor('R');
-    LR = false;
-  }
-  else if(RL){ //Right and then Left Rotation
-    cout << "RL" << endl;
-    BNode* right = root->getRight();
-    root->setRight(rotateRight(right, root));
-    root->getRight()->setParent(root);
-    root->setLeft(root);
-    root->setColor('B');
-    root->getLeft()->setColor('R');
-    RL = false;
-  }
-
-  if(isRedRed){
-    cout << "isredred" << endl;
-    if(root->getParent()->getRight() == root){ //Check if on the right
-      if(!root->getParent()->getLeft() ||
-	 root->getParent()->getLeft()->getColor() == 'B'){ //If there are two black children
-	if(root->getRight() && root->getRight()->getColor() == 'R')
-	  LL = true;
-	else if(root->getLeft() && root->getLeft()->getColor() == 'R')
-	  RL = true;
-      }
-      else{ //If the uncle is red
-	root->getParent()->getLeft()->setColor('B');
-	root->setColor('B');
-	if(root->getParent() != root)
-	  root->getParent()->setColor('R');
-      }
-    }
-
-    else{
-      if(!root->getParent()->getRight() ||
-         root->getParent()->getRight()->getColor() == 'B'){ //If there are two black children    
-        if(root->getLeft() && root->getLeft()->getColor() == 'R')
-          RR = true;
-        else if(root->getRight() && root->getRight()->getColor() == 'R')
-          LR = true;
-      }
-      else{ //If the uncle is red
-        root->getParent()->getRight()->setColor('B');
-        root->setColor('B');
-        if(root->getParent() != root)
-          root->getParent()->setColor('R');
-      }
-    }
-    isRedRed = false;
-  }
-  return root;
-  }*/
 
 //Function to print out the binary search tree
 void printTree(BNode* root, int count) {
@@ -547,15 +404,6 @@ BNode* nextValue(BNode* root){
 }
 
 void rotateRight(BNode* &root, BNode* &node){
-  /*BNode* x = node->getLeft();
-  BNode* y = x->getRight();
-  x->setRight(node);
-  node->setLeft(y);
-  node->setParent(x);
-  if(y)
-    y->setParent(node);
-  return x;*/
-
   BNode* y = node->getLeft();
   node->setLeft(y->getRight());
   if(node->getLeft())
@@ -569,20 +417,9 @@ void rotateRight(BNode* &root, BNode* &node){
     node->getParent()->setRight(y);
   y->setRight(node);
   node->setParent(y);
-  //printTree(root, 0);
-  //return y;
 }
 
 void rotateLeft(BNode* &root, BNode* &node){
-  /*BNode* x = node->getRight();
-  BNode* y = x->getLeft();
-  x->setLeft(node);
-  node->setRight(y);
-  node->setParent(x);
-  if(y)
-    y->setParent(node);
-  return x;*/
-
   BNode* y = node->getRight();
   node->setRight(y->getLeft());
   if(node->getRight())
@@ -596,13 +433,4 @@ void rotateLeft(BNode* &root, BNode* &node){
     node->getParent()->setRight(y);
   y->setLeft(node);
   node->setParent(y);
-  //printTree(root, 0);
-  //return y;
-  
-  /*BNode* y = x->getRight();
-  x->setRight(y->getLeft());
-  if(y->getLeft())
-    y->getLeft()->setParent(x);
-    y->setParent(x->getParent());*/
-  //if(!x->getParent()) //x is root
 }
