@@ -7,7 +7,8 @@ using namespace std;
 /*
  * Author: Fiona Wang
  * Date: April 18, 2022
- * This program takes an input from the console or a file and builds a binary search tree
+ * This program takes an input from the console or a file and builds a red black tree
+ * This code uses parts from the GeeksforGeeks red black tree page
  */
 
 //Class for the nodes used in the binary tree
@@ -252,48 +253,53 @@ BNode* add(BNode* &root, int data, bool &LL, bool &RR, bool &LR, bool &RL){
   return NULL;
 }
 
+//Function to check if the tree violates any of the RBT properties
 void checkTree(BNode* &root, BNode* &node){
+  //Initialize the parent, grandparent, and uncle
   BNode* parent = NULL;
   BNode* grandpa = NULL;
   BNode* uncle = NULL;
-  
+
+  //While loop to ensure that the tree is perfect
   while((node != root) && (node->getColor() == 'R') && (node->getParent()->getColor() == 'R')) {
     parent = node->getParent();
     grandpa = node->getParent()->getParent();
-    if(parent == grandpa->getLeft()) { //Parent is the left child
+    if(parent == grandpa->getLeft()) { //If the parent is the left child
       uncle = grandpa->getRight();
-      if(uncle && uncle->getColor() == 'R'){
+      if(uncle && uncle->getColor() == 'R'){ //If the uncle is red (case 3)
 	grandpa->setColor('R');
 	parent->setColor('B');
 	uncle->setColor('B');
 	node = grandpa;
       }
-      else {
-	if(node == parent->getRight()) {
+      else { //If the uncle is not red
+	if(node == parent->getRight()) { //Needs a left rotation (case 4)
 	  rotateLeft(root, parent);
 	  node = parent;
 	  parent = node->getParent();
 	}
-	rotateRight(root, grandpa);
+	//Needs a right rotation (case 5)
+	rotateRight(root, grandpa); 
 	parent->setColor('B');
 	grandpa->setColor('R');
 	node = parent;
       }
     }
-    else {
+    else { //If the parent is the right child
       uncle = grandpa->getLeft();
-      if(uncle != NULL && uncle->getColor() == 'R'){
+      if(uncle != NULL && uncle->getColor() == 'R'){ //If the uncle is red (case 3)
         grandpa->setColor('R');
         parent->setColor('B');
         uncle->setColor('B');
         node = grandpa;
       }
-      else {
-        if(node == parent->getLeft()){
+      else { //If the uncle is not red
+        if(node == parent->getLeft()){ //Needs a right rotation (case 4)
           rotateRight(root, parent);
           node = parent;
           parent = node->getParent();
         }
+	//Needs a left rotation (case 5)
         rotateLeft(root, grandpa);
         parent->setColor('B');
 	grandpa->setColor('R');
@@ -301,6 +307,7 @@ void checkTree(BNode* &root, BNode* &node){
       }
     }
   }
+  //Make sure the root is black
   root->setColor('B');
 }
 
@@ -403,34 +410,40 @@ BNode* nextValue(BNode* root){
   return current;
 }
 
+//Function to rotate the tree right
+//Referenced from GeeksforGeeks
 void rotateRight(BNode* &root, BNode* &node){
   BNode* y = node->getLeft();
   node->setLeft(y->getRight());
-  if(node->getLeft())
+  if(node->getLeft()) //Update the node's parent
     node->getLeft()->setParent(node);
   y->setParent(node->getParent());
   if(!node->getParent())
-    root = y;
-  else if(node == node->getParent()->getLeft())
+    root = y; //Update the root
+  else if(node == node->getParent()->getLeft()) //If is the left child
     node->getParent()->setLeft(y);
-  else
+  else //If is the right child
     node->getParent()->setRight(y);
+  //Update the node's child
   y->setRight(node);
   node->setParent(y);
 }
 
+//Function to rotate the tree left
+//Referenced from GeeksforGeeks
 void rotateLeft(BNode* &root, BNode* &node){
   BNode* y = node->getRight();
   node->setRight(y->getLeft());
-  if(node->getRight())
+  if(node->getRight()) //Update the node's parent
     node->getRight()->setParent(node);
   y->setParent(node->getParent());
-  if(!node->getParent())
+  if(!node->getParent()) //Update the root
     root = y;
-  else if(node == node->getParent()->getLeft())
+  else if(node == node->getParent()->getLeft()) //If is left child
     node->getParent()->setLeft(y);
-  else
+  else //If is right child
     node->getParent()->setRight(y);
+  //Update the node's child
   y->setLeft(node);
   node->setParent(y);
 }
