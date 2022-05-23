@@ -90,6 +90,7 @@ BNode* nextValue(BNode* root);
 void checkTree(BNode* &root, BNode* &node);
 void rotateLeft(BNode* &root, BNode* &node);
 void rotateRight(BNode* &root, BNode* &node);
+void checkDelete(BNode* &actualRoot, BNode* &root, BNode* &node);
 
 int main() {
   //Initializing variables
@@ -148,7 +149,7 @@ int main() {
 	cout << searchNum << " does not exist in the tree!" << endl;
       cout << "Enter a command (enter add, search, print, or quit)" << endl;
     }
-    /*else if(strcmp(command, "DELETE") == false){
+    else if(strcmp(command, "DELETE") == false){
       //Ask what number to delete
       cout << "What number do you want to delete?" << endl;
       int deleteNum;
@@ -162,7 +163,7 @@ int main() {
         cout << deleteNum << " does not exist in the tree!" << endl;
 
 	cout << "Enter a command (enter add, search, delete, print, or quit)" << endl;
-    }*/
+    }
     else if(strcmp(command, "PRINT") == false){
       //Print the whole tree
       printTree(root, 0);
@@ -327,7 +328,10 @@ void printTree(BNode* root, int count) {
   for(int i=0; i<count; i++){
     cout << "\t";
   }
-  cout << root->getData() << " " << root->getColor() << endl;
+  if(root->getColor() == 'B')
+    cout << root->getData() << endl;
+  else
+    cout << "\033[1;31m" << root->getData() << "\033[0m" << endl;
 
   //Go through the left side of the tree
   if(root->getLeft())
@@ -359,7 +363,8 @@ int search(BNode* root, int searchNum) {
 }
 
 //Function to delete a specific node in the tree
-BNode* deleteOne(BNode* root, int deleteNum){
+BNode* deleteOne(BNode* actualRoot, BNode* root, int deleteNum){
+  bool dB = false;
   //If the tree is empty
   if(!root){
     return root;
@@ -377,18 +382,37 @@ BNode* deleteOne(BNode* root, int deleteNum){
   else if(root->getData() == deleteNum){
     //If it has no children nodes
     if(!root->getLeft() && !root->getRight()){
+      checkDelete(actualRoot, root);
       return NULL;
     }
 
     //If it has one child node (left or right)
     else if(!root->getLeft()){
       BNode* temp = root->getRight();
+      if(root->getColor() == 'R' || root->getRight()->getColor() == 'R'){
+	temp->setColor('B');
+      }
+      else {
+	dB = true;
+      }
+      temp->setParent(root->getParent());
       delete root;
+      if(dB)
+	checkDelete(actualRoot, temp);
       return temp;
     }
     else if(!root->getRight()){
       BNode* temp = root->getLeft();
+      if(root->getColor() == 'R' || root->getLeft()->getColor() == 'R'){
+        temp->setColor('B');
+      }
+      else {
+	dB = true;
+      }
+      temp->setParent(root->getParent());
       delete root;
+      if(dB)
+	checkDelete(actualRoot, temp);
       return temp;
     }
 
@@ -398,6 +422,10 @@ BNode* deleteOne(BNode* root, int deleteNum){
     root->setRight(deleteOne(root->getRight(), temp->getData()));
   }
   return root;
+}
+
+void checkDelete(BNode* &actualRoot, BNode* &root, BNode* &node){
+  cout << "db" << endl;
 }
 
 //Function to find the next smallest number in the tree
