@@ -85,12 +85,12 @@ void addFile(BNode* &root, bool &LL, bool &RR, bool &LR, bool &RL);
 BNode* add(BNode* &root, int data, bool &LL, bool &RR, bool &LR, bool &RL);
 void printTree(BNode* root,  int count);
 int search(BNode* root, int searchNum);
-BNode* deleteOne(BNode* root, int deleteNum);
+BNode* deleteOne(BNode* &actualRoot, BNode* root, int deleteNum);
 BNode* nextValue(BNode* root);
 void checkTree(BNode* &root, BNode* &node);
 void rotateLeft(BNode* &root, BNode* &node);
 void rotateRight(BNode* &root, BNode* &node);
-void checkDelete(BNode* &actualRoot, BNode* &root, BNode* &node);
+void checkDelete(BNode* &root, BNode* &node);
 
 int main() {
   //Initializing variables
@@ -158,7 +158,7 @@ int main() {
       int rootNum = root->getData();
       //Check if the number exists in the tree
       if(found == deleteNum)
-        root = deleteOne(root, deleteNum);
+        root = deleteOne(root, root, deleteNum);
       else
         cout << deleteNum << " does not exist in the tree!" << endl;
 
@@ -363,7 +363,7 @@ int search(BNode* root, int searchNum) {
 }
 
 //Function to delete a specific node in the tree
-BNode* deleteOne(BNode* actualRoot, BNode* root, int deleteNum){
+BNode* deleteOne(BNode* &actualRoot, BNode* root, int deleteNum){
   bool dB = false;
   //If the tree is empty
   if(!root){
@@ -371,11 +371,11 @@ BNode* deleteOne(BNode* actualRoot, BNode* root, int deleteNum){
   }
   //If the number is bigger, traverse to the right node
   if(root->getData() < deleteNum){
-    root->setRight(deleteOne(root->getRight(), deleteNum));
+    root->setRight(deleteOne(root, root->getRight(), deleteNum));
   }
   //If the number is smaller, traverse to the left node
   else if(root->getData() > deleteNum){
-    root->setLeft(deleteOne(root->getLeft(), deleteNum));
+    root->setLeft(deleteOne(root, root->getLeft(), deleteNum));
   }
 
   //If the correct node is found
@@ -392,7 +392,7 @@ BNode* deleteOne(BNode* actualRoot, BNode* root, int deleteNum){
       if(root->getColor() == 'R' || root->getRight()->getColor() == 'R'){
 	temp->setColor('B');
       }
-      else {
+      else if(root->getRight() == NULL || root->getRight()->getColor() == 'B'){
 	dB = true;
       }
       temp->setParent(root->getParent());
@@ -406,7 +406,7 @@ BNode* deleteOne(BNode* actualRoot, BNode* root, int deleteNum){
       if(root->getColor() == 'R' || root->getLeft()->getColor() == 'R'){
         temp->setColor('B');
       }
-      else {
+      else if(root->getLeft() == NULL || root->getLeft()->getColor() == 'B'){
 	dB = true;
       }
       temp->setParent(root->getParent());
@@ -419,13 +419,83 @@ BNode* deleteOne(BNode* actualRoot, BNode* root, int deleteNum){
     //If it has two children
     BNode* temp = nextValue(root->getRight());
     root->setData(temp->getData());
-    root->setRight(deleteOne(root->getRight(), temp->getData()));
+    root->setRight(deleteOne(root, root->getRight(), temp->getData()));
   }
   return root;
 }
 
-void checkDelete(BNode* &actualRoot, BNode* &root, BNode* &node){
+void checkDelete(BNode* &root, BNode* &node){
   cout << "db" << endl;
+  if(node == root){
+    root->setColor('B');
+    return;
+  }
+  BNode* parent = node->getParent();
+  BNode* sibling = node;
+  if(parent->getRight() == node)
+    sibling = parent->getLeft();
+  else
+    sibling = parent->getRight();
+
+  if(!sibling)
+    checkDelete(root, parent);
+  else{
+    if(sibling->getColor() == 'R'){ //Sibling is red
+      //Switch the parent and sibling color
+      parent->setColor('R');
+      sibling->setColor('B');
+      //Find which side the sibling is on and rotate
+      if(parent->getLeft() == sibling){
+	rotateRight(root, parent);
+      } else {
+	rotateLeft(root, parent);
+      }
+      checkDelete(root, node);
+    }
+    else { //Sibling is black
+      //If the sibling has a red child
+      if((sibling->getLeft() && sibling->getLeft()->getColor() == 'R') ||
+	 (sibling->getRight() && sibling->getRight()->getColor() == 'R')){
+	//Sibling has a red child on the left
+	if(sibling->getLeft() && sibling->getLeft()->getColor() == 'R'){
+	  if(parent->getLeft() == sibling){
+	    //Sibling is on the left and red child is on the left
+	    sibling->getLeft()->setColor(sibling->getColor());
+	    sibling->setColor(parent->getColor());
+	    rotateRight(root, parent);
+	  }
+	  else {
+	    //Sibling is on the right and the red child is on the right
+	    sibling->getLeft()->setColor(parent->getColor());
+	    rotateRight(root, sibling);
+	    rotateLeft(root, parent);
+	  }
+	}
+	else { //Red child is on the right
+	  if(parent->getLeft() == sibling){
+	    //Sibling is on the left and red child is on the right
+	    sibling->getRight()->setColor(parent->getColor());
+	    rotateLeft(root, sibling);
+	    rotateRight(root, parent);
+	  }
+	  else {
+	    //Sibling is on the right and the red child is on the right
+	    sibling->getRight()->setColor(sibling->getColor());
+	    sibling->setColor(parent->getColor());
+	    rotateLeft(root, parent);
+	  }
+	}
+	parent->setColor('B');
+      }
+      else { //Both children are black
+	sibling->setColor('R');
+	if(parent->getColor() == 'B')
+	  checkDelete(root, parent);
+	else
+	  parent->setColor('B');
+      }
+    }
+  }
 }
 
 //Function to find the next smallest number in the tree
