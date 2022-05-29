@@ -380,9 +380,11 @@ BNode* deleteOne(BNode* &actualRoot, BNode* root, int deleteNum){
 
   //If the correct node is found
   else if(root->getData() == deleteNum){
+    cout << root->getData() << endl;
     //If it has no children nodes
     if(!root->getLeft() && !root->getRight()){
-      checkDelete(actualRoot, root);
+      if(root->getColor() != 'R')
+	checkDelete(actualRoot, root);
       return NULL;
     }
 
@@ -427,7 +429,7 @@ BNode* deleteOne(BNode* &actualRoot, BNode* root, int deleteNum){
 void checkDelete(BNode* &root, BNode* &node){
   cout << "db" << endl;
   if(node == root){
-    root->setColor('B');
+    //root->setColor('B');
     return;
   }
   BNode* parent = node->getParent();
@@ -465,7 +467,7 @@ void checkDelete(BNode* &root, BNode* &node){
 	    rotateRight(root, parent);
 	  }
 	  else {
-	    //Sibling is on the right and the red child is on the right
+	    //Sibling is on the right and the red child is on the left
 	    sibling->getLeft()->setColor(parent->getColor());
 	    rotateRight(root, sibling);
 	    rotateLeft(root, parent);
