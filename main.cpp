@@ -371,11 +371,17 @@ BNode* deleteOne(BNode* &actualRoot, BNode* root, int deleteNum){
   }
   //If the number is bigger, traverse to the right node
   if(root->getData() < deleteNum){
-    root->setRight(deleteOne(root, root->getRight(), deleteNum));
+    root->setRight(deleteOne(actualRoot, root->getRight(), deleteNum));
+    //BNode* right = root->getRight();
+    //deleteOne(root, right, deleteNum);
+    return root;
   }
   //If the number is smaller, traverse to the left node
   else if(root->getData() > deleteNum){
-    root->setLeft(deleteOne(root, root->getLeft(), deleteNum));
+    root->setLeft(deleteOne(actualRoot, root->getLeft(), deleteNum));
+    //BNode* left = root->getLeft();
+    //deleteOne(root, left, deleteNum);
+    return root;
   }
 
   //If the correct node is found
@@ -383,9 +389,24 @@ BNode* deleteOne(BNode* &actualRoot, BNode* root, int deleteNum){
     cout << root->getData() << endl;
     //If it has no children nodes
     if(!root->getLeft() && !root->getRight()){
-      if(root->getColor() != 'R')
+      if(root->getColor() == 'B'){
+	root->setData(0);
+	//delete root;
 	checkDelete(actualRoot, root);
-      return NULL;
+	cout << root->getData() << endl;
+	//printTree(actualRoot, 0);
+	if(root->getParent()->getLeft() == root){
+	  root->getParent()->setLeft(NULL);
+	} else
+	  root->getParent()->setRight(NULL);
+	delete root;
+	printTree(actualRoot, 0);
+	//return NULL;
+	return actualRoot;
+	//cout << root->getData() << endl;
+	//return root;
+      } else
+	return NULL;
     }
 
     //If it has one child node (left or right)
@@ -418,12 +439,17 @@ BNode* deleteOne(BNode* &actualRoot, BNode* root, int deleteNum){
       return temp;
     }
 
-    //If it has two children
-    BNode* temp = nextValue(root->getRight());
-    root->setData(temp->getData());
-    root->setRight(deleteOne(root, root->getRight(), temp->getData()));
+    else{
+      //If it has two children
+      BNode* temp = nextValue(root->getRight());
+      root->setData(temp->getData());
+      //BNode* tempR = temp->getRight();
+      //deleteOne(root, tempR, temp->getData());
+      root->setRight(deleteOne(actualRoot, root->getRight(), temp->getData()));
+      return root;
+    }
   }
-  return root;
+  return actualRoot;
 }
 
 void checkDelete(BNode* &root, BNode* &node){
@@ -461,12 +487,14 @@ void checkDelete(BNode* &root, BNode* &node){
 	//Sibling has a red child on the left
 	if(sibling->getLeft() && sibling->getLeft()->getColor() == 'R'){
 	  if(parent->getLeft() == sibling){
+	    cout << "LL" << endl;
 	    //Sibling is on the left and red child is on the left
 	    sibling->getLeft()->setColor(sibling->getColor());
 	    sibling->setColor(parent->getColor());
 	    rotateRight(root, parent);
 	  }
 	  else {
+	    cout << "RL" << endl;
 	    //Sibling is on the right and the red child is on the left
 	    sibling->getLeft()->setColor(parent->getColor());
 	    rotateRight(root, sibling);
@@ -475,12 +503,14 @@ void checkDelete(BNode* &root, BNode* &node){
 	}
 	else { //Red child is on the right
 	  if(parent->getLeft() == sibling){
+	    cout << "LR" << endl;
 	    //Sibling is on the left and red child is on the right
 	    sibling->getRight()->setColor(parent->getColor());
 	    rotateLeft(root, sibling);
 	    rotateRight(root, parent);
 	  }
 	  else {
+	    cout << "RR" << endl;
 	    //Sibling is on the right and the red child is on the right
 	    sibling->getRight()->setColor(sibling->getColor());
 	    sibling->setColor(parent->getColor());
