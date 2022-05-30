@@ -85,12 +85,14 @@ void addFile(BNode* &root, bool &LL, bool &RR, bool &LR, bool &RL);
 BNode* add(BNode* &root, int data, bool &LL, bool &RR, bool &LR, bool &RL);
 void printTree(BNode* root,  int count);
 int search(BNode* root, int searchNum);
-BNode* deleteOne(BNode* &actualRoot, BNode* root, int deleteNum);
+//BNode* deleteOne(BNode* &actualRoot, BNode* root, int deleteNum);
+BNode* deleteOne(BNode* &actualRoot, BNode* startNode, int deleteNum);
 BNode* nextValue(BNode* root);
 void checkTree(BNode* &root, BNode* &node);
 void rotateLeft(BNode* &root, BNode* &node);
 void rotateRight(BNode* &root, BNode* &node);
 void checkDelete(BNode* &root, BNode* &node);
+BNode* findNode(BNode* root, int data);
 
 int main() {
   //Initializing variables
@@ -362,6 +364,134 @@ int search(BNode* root, int searchNum) {
   }
 }
 
+BNode* findNode(BNode* root, int data) {
+  BNode* v = root;
+  while (v != NULL) {
+    if (v->getData() > data) { //go left
+      v = v->getLeft();
+    } else if (v->getData() < data) { //go right
+      v = v->getRight();
+    } else if (v->getData() == data) {
+      return v;
+    }
+  }
+  return NULL;
+}
+
+//Function to delete a specific node in the tree
+BNode* deleteOne(BNode* &actualRoot, BNode* startNode, int deleteNum){
+  bool dB = false;
+  //If the tree is empty                                                                        
+  if(!actualRoot){
+    return actualRoot;
+  }
+  else if(!actualRoot->getLeft() && !actualRoot->getRight()){
+    return NULL;
+  }
+  else{
+    BNode* root = findNode(startNode, deleteNum);
+    //cout << root->getData() << endl;
+    //If it has no children nodes                                                               
+    if(!root->getLeft() && !root->getRight()){
+      if(root->getColor() == 'B'){
+        root->setData(0);
+        //delete root;                                                                          
+        checkDelete(actualRoot, root);
+        //cout << root->getData() << endl;
+      }
+        if(root->getParent()->getLeft() == root){
+          root->getParent()->setLeft(NULL);
+        } else
+          root->getParent()->setRight(NULL);
+        delete root;
+	//	printTree(actualRoot, 0);
+        //printTree(actualRoot, 0);
+	//cout << actualRoot->getData() << endl;
+        return actualRoot;
+	//} else
+	//delete root;
+	//return actualRoot;
+    }
+
+    //If it has one child node (left or right)                                                  
+    else if(!root->getLeft()){
+      //cout << "child on right" << endl;
+      BNode* temp = root->getRight();
+      if(root->getColor() == 'R' || root->getRight()->getColor() == 'R'){
+        temp->setColor('B');
+      }
+      else if(root->getRight() == NULL || root->getRight()->getColor() == 'B'){
+        dB = true;
+      }
+
+      if(root->getParent()){
+        if(root->getParent()->getRight() == root)
+          root->getParent()->setRight(temp);
+        else
+          root->getParent()->setLeft(temp);
+        temp->setParent(root->getParent());
+      }
+      else {
+	actualRoot = temp;
+      }
+      
+      /*if(root->getParent()->getRight() == root)
+	root->getParent()->setRight(temp);
+      else
+	root->getParent()->setLeft(temp);
+      temp->setParent(root->getParent());*/
+      delete root;
+      if(dB)
+        checkDelete(actualRoot, temp);
+      //printTree(actualRoot, 0);
+      //return temp;
+    }
+    else if(!root->getRight()){
+      //cout << "child on left" << endl;
+      BNode* temp = root->getLeft();
+      if(root->getColor() == 'R' || root->getLeft()->getColor() == 'R'){
+        temp->setColor('B');
+      }
+      else if(root->getLeft() == NULL || root->getLeft()->getColor() == 'B'){
+        dB = true;
+      }
+      if(root->getParent()){
+	if(root->getParent()->getRight() == root)
+	  root->getParent()->setRight(temp);
+	else
+	  root->getParent()->setLeft(temp);
+	temp->setParent(root->getParent());
+      }
+      else {
+	actualRoot = temp;
+      }
+      delete root;
+      if(dB)
+        checkDelete(actualRoot, temp);
+      //printTree(actualRoot, 0);
+      //return temp;
+    }
+
+    else{
+      //cout << "two children" << endl;
+      //If it has two children
+      BNode* temp = nextValue(root->getRight());
+      //cout << temp->getData() << endl;
+      root->setData(temp->getData());
+      //BNode* tempR = temp->getRight();
+      //BNode* tempR = root->getRight(); 
+      deleteOne(actualRoot, root->getRight(),  temp->getData());
+      //root->setRight(deleteOne(actualRoot, root->getRight(), temp->getData()));
+      //root->setRight(deleteOne(actualRoot, temp->getData()));
+      //return actualRoot;
+      //printTree(actualRoot, 0);
+      return actualRoot;
+    }
+  }
+  return actualRoot;
+}
+      
+/*
 //Function to delete a specific node in the tree
 BNode* deleteOne(BNode* &actualRoot, BNode* root, int deleteNum){
   bool dB = false;
@@ -451,9 +581,10 @@ BNode* deleteOne(BNode* &actualRoot, BNode* root, int deleteNum){
   }
   return actualRoot;
 }
+*/
 
 void checkDelete(BNode* &root, BNode* &node){
-  cout << "db" << endl;
+  //cout << "db" << endl;
   if(node == root){
     //root->setColor('B');
     return;
@@ -487,14 +618,14 @@ void checkDelete(BNode* &root, BNode* &node){
 	//Sibling has a red child on the left
 	if(sibling->getLeft() && sibling->getLeft()->getColor() == 'R'){
 	  if(parent->getLeft() == sibling){
-	    cout << "LL" << endl;
+	    //cout << "LL" << endl;
 	    //Sibling is on the left and red child is on the left
 	    sibling->getLeft()->setColor(sibling->getColor());
 	    sibling->setColor(parent->getColor());
 	    rotateRight(root, parent);
 	  }
 	  else {
-	    cout << "RL" << endl;
+	    //cout << "RL" << endl;
 	    //Sibling is on the right and the red child is on the left
 	    sibling->getLeft()->setColor(parent->getColor());
 	    rotateRight(root, sibling);
@@ -503,14 +634,14 @@ void checkDelete(BNode* &root, BNode* &node){
 	}
 	else { //Red child is on the right
 	  if(parent->getLeft() == sibling){
-	    cout << "LR" << endl;
+	    //cout << "LR" << endl;
 	    //Sibling is on the left and red child is on the right
 	    sibling->getRight()->setColor(parent->getColor());
 	    rotateLeft(root, sibling);
 	    rotateRight(root, parent);
 	  }
 	  else {
-	    cout << "RR" << endl;
+	    //cout << "RR" << endl;
 	    //Sibling is on the right and the red child is on the right
 	    sibling->getRight()->setColor(sibling->getColor());
 	    sibling->setColor(parent->getColor());
