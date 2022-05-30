@@ -473,6 +473,7 @@ BNode* deleteOne(BNode* &actualRoot, BNode* startNode, int deleteNum){
 }
 
 //Function to correct double black during deletion
+//References the Geeksforgeeks red black tree page
 void checkDelete(BNode* &root, BNode* &node){
   if(node == root){
     return;
