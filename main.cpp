@@ -85,7 +85,6 @@ void addFile(BNode* &root, bool &LL, bool &RR, bool &LR, bool &RL);
 BNode* add(BNode* &root, int data, bool &LL, bool &RR, bool &LR, bool &RL);
 void printTree(BNode* root,  int count);
 int search(BNode* root, int searchNum);
-//BNode* deleteOne(BNode* &actualRoot, BNode* root, int deleteNum);
 BNode* deleteOne(BNode* &actualRoot, BNode* startNode, int deleteNum);
 BNode* nextValue(BNode* root);
 void checkTree(BNode* &root, BNode* &node);
@@ -107,7 +106,7 @@ int main() {
   bool RL = false;
 
   //Ask the user for a command
-  cout << "Enter a command (enter add, search, print, or quit)" << endl;
+  cout << "Enter a command (enter add, delete, search, print, or quit)" << endl;
   while(running == true){
     cin >> command;
     
@@ -136,7 +135,7 @@ int main() {
 	cout << "Not a valid file type" << endl;
       }
 
-      cout << "Enter a command (enter add, search, print, or quit)" << endl;
+      cout << "Enter a command (enter add, delete, search, print, or quit)" << endl;
     }
     else if(strcmp(command, "SEARCH") == false){
       //Ask what number to fine
@@ -149,7 +148,7 @@ int main() {
 	cout << searchNum << " exists in the tree!" << endl;
       else
 	cout << searchNum << " does not exist in the tree!" << endl;
-      cout << "Enter a command (enter add, search, print, or quit)" << endl;
+      cout << "Enter a command (enter add, delete, search, print, or quit)" << endl;
     }
     else if(strcmp(command, "DELETE") == false){
       //Ask what number to delete
@@ -164,13 +163,12 @@ int main() {
       else
         cout << deleteNum << " does not exist in the tree!" << endl;
 
-	cout << "Enter a command (enter add, search, delete, print, or quit)" << endl;
+	cout << "Enter a command (enter add, delete, search, delete, print, or quit)" << endl;
     }
     else if(strcmp(command, "PRINT") == false){
       //Print the whole tree
       printTree(root, 0);
-      cout << "Enter a command (enter add, search, print, or quit)" << endl;
-      //root=rotateRight(root);
+      cout << "Enter a command (enter add, delete, search, print, or quit)" << endl;
     }
     else if(strcmp(command, "QUIT") == false){
       running = false;
@@ -364,15 +362,16 @@ int search(BNode* root, int searchNum) {
   }
 }
 
+//Function to locate which node to delete
 BNode* findNode(BNode* root, int data) {
-  BNode* v = root;
-  while (v != NULL) {
-    if (v->getData() > data) { //go left
-      v = v->getLeft();
-    } else if (v->getData() < data) { //go right
-      v = v->getRight();
-    } else if (v->getData() == data) {
-      return v;
+  BNode* node = root;
+  while (node != NULL) {
+    if (node->getData() > data) { //go left
+      node = node->getLeft();
+    } else if (node->getData() < data) { //go right
+      node = node->getRight();
+    } else if (node->getData() == data) {
+      return node;
     }
   }
   return NULL;
@@ -381,41 +380,34 @@ BNode* findNode(BNode* root, int data) {
 //Function to delete a specific node in the tree
 BNode* deleteOne(BNode* &actualRoot, BNode* startNode, int deleteNum){
   bool dB = false;
-  //If the tree is empty                                                                        
+  //If the tree is empty
   if(!actualRoot){
     return actualRoot;
   }
+  //If there is only one node
   else if(!actualRoot->getLeft() && !actualRoot->getRight()){
     return NULL;
   }
-  else{
+  else {
     BNode* root = findNode(startNode, deleteNum);
-    //cout << root->getData() << endl;
-    //If it has no children nodes                                                               
+    //If it has no children nodes
     if(!root->getLeft() && !root->getRight()){
       if(root->getColor() == 'B'){
         root->setData(0);
-        //delete root;                                                                          
         checkDelete(actualRoot, root);
-        //cout << root->getData() << endl;
       }
-        if(root->getParent()->getLeft() == root){
-          root->getParent()->setLeft(NULL);
-        } else
-          root->getParent()->setRight(NULL);
-        delete root;
-	//	printTree(actualRoot, 0);
-        //printTree(actualRoot, 0);
-	//cout << actualRoot->getData() << endl;
-        return actualRoot;
-	//} else
-	//delete root;
-	//return actualRoot;
+      //Delete the node after correcting the tree
+      if(root->getParent()->getLeft() == root){
+        root->getParent()->setLeft(NULL);
+      } else
+        root->getParent()->setRight(NULL);
+      delete root;
+      return actualRoot;
     }
 
-    //If it has one child node (left or right)                                                  
+    //If it has one child node (left or right)
     else if(!root->getLeft()){
-      //cout << "child on right" << endl;
+      //Child is on the right
       BNode* temp = root->getRight();
       if(root->getColor() == 'R' || root->getRight()->getColor() == 'R'){
         temp->setColor('B');
@@ -424,6 +416,7 @@ BNode* deleteOne(BNode* &actualRoot, BNode* startNode, int deleteNum){
         dB = true;
       }
 
+      //Reattach everything in the tree
       if(root->getParent()){
         if(root->getParent()->getRight() == root)
           root->getParent()->setRight(temp);
@@ -434,20 +427,14 @@ BNode* deleteOne(BNode* &actualRoot, BNode* startNode, int deleteNum){
       else {
 	actualRoot = temp;
       }
-      
-      /*if(root->getParent()->getRight() == root)
-	root->getParent()->setRight(temp);
-      else
-	root->getParent()->setLeft(temp);
-      temp->setParent(root->getParent());*/
       delete root;
+
+      //Correct double black if needed
       if(dB)
         checkDelete(actualRoot, temp);
-      //printTree(actualRoot, 0);
-      //return temp;
     }
     else if(!root->getRight()){
-      //cout << "child on left" << endl;
+      //Child is on the left
       BNode* temp = root->getLeft();
       if(root->getColor() == 'R' || root->getLeft()->getColor() == 'R'){
         temp->setColor('B');
@@ -455,6 +442,8 @@ BNode* deleteOne(BNode* &actualRoot, BNode* startNode, int deleteNum){
       else if(root->getLeft() == NULL || root->getLeft()->getColor() == 'B'){
         dB = true;
       }
+
+      //Reconnect everything to the tree
       if(root->getParent()){
 	if(root->getParent()->getRight() == root)
 	  root->getParent()->setRight(temp);
@@ -466,127 +455,26 @@ BNode* deleteOne(BNode* &actualRoot, BNode* startNode, int deleteNum){
 	actualRoot = temp;
       }
       delete root;
+
+      //Correct double black if needed
       if(dB)
         checkDelete(actualRoot, temp);
-      //printTree(actualRoot, 0);
-      //return temp;
     }
 
-    else{
-      //cout << "two children" << endl;
+    else {
       //If it has two children
       BNode* temp = nextValue(root->getRight());
-      //cout << temp->getData() << endl;
       root->setData(temp->getData());
-      //BNode* tempR = temp->getRight();
-      //BNode* tempR = root->getRight(); 
       deleteOne(actualRoot, root->getRight(),  temp->getData());
-      //root->setRight(deleteOne(actualRoot, root->getRight(), temp->getData()));
-      //root->setRight(deleteOne(actualRoot, temp->getData()));
-      //return actualRoot;
-      //printTree(actualRoot, 0);
       return actualRoot;
     }
   }
   return actualRoot;
 }
-      
-/*
-//Function to delete a specific node in the tree
-BNode* deleteOne(BNode* &actualRoot, BNode* root, int deleteNum){
-  bool dB = false;
-  //If the tree is empty
-  if(!root){
-    return root;
-  }
-  //If the number is bigger, traverse to the right node
-  if(root->getData() < deleteNum){
-    root->setRight(deleteOne(actualRoot, root->getRight(), deleteNum));
-    //BNode* right = root->getRight();
-    //deleteOne(root, right, deleteNum);
-    return root;
-  }
-  //If the number is smaller, traverse to the left node
-  else if(root->getData() > deleteNum){
-    root->setLeft(deleteOne(actualRoot, root->getLeft(), deleteNum));
-    //BNode* left = root->getLeft();
-    //deleteOne(root, left, deleteNum);
-    return root;
-  }
 
-  //If the correct node is found
-  else if(root->getData() == deleteNum){
-    cout << root->getData() << endl;
-    //If it has no children nodes
-    if(!root->getLeft() && !root->getRight()){
-      if(root->getColor() == 'B'){
-	root->setData(0);
-	//delete root;
-	checkDelete(actualRoot, root);
-	cout << root->getData() << endl;
-	//printTree(actualRoot, 0);
-	if(root->getParent()->getLeft() == root){
-	  root->getParent()->setLeft(NULL);
-	} else
-	  root->getParent()->setRight(NULL);
-	delete root;
-	printTree(actualRoot, 0);
-	//return NULL;
-	return actualRoot;
-	//cout << root->getData() << endl;
-	//return root;
-      } else
-	return NULL;
-    }
-
-    //If it has one child node (left or right)
-    else if(!root->getLeft()){
-      BNode* temp = root->getRight();
-      if(root->getColor() == 'R' || root->getRight()->getColor() == 'R'){
-	temp->setColor('B');
-      }
-      else if(root->getRight() == NULL || root->getRight()->getColor() == 'B'){
-	dB = true;
-      }
-      temp->setParent(root->getParent());
-      delete root;
-      if(dB)
-	checkDelete(actualRoot, temp);
-      return temp;
-    }
-    else if(!root->getRight()){
-      BNode* temp = root->getLeft();
-      if(root->getColor() == 'R' || root->getLeft()->getColor() == 'R'){
-        temp->setColor('B');
-      }
-      else if(root->getLeft() == NULL || root->getLeft()->getColor() == 'B'){
-	dB = true;
-      }
-      temp->setParent(root->getParent());
-      delete root;
-      if(dB)
-	checkDelete(actualRoot, temp);
-      return temp;
-    }
-
-    else{
-      //If it has two children
-      BNode* temp = nextValue(root->getRight());
-      root->setData(temp->getData());
-      //BNode* tempR = temp->getRight();
-      //deleteOne(root, tempR, temp->getData());
-      root->setRight(deleteOne(actualRoot, root->getRight(), temp->getData()));
-      return root;
-    }
-  }
-  return actualRoot;
-}
-*/
-
+//Function to correct double black during deletion
 void checkDelete(BNode* &root, BNode* &node){
-  //cout << "db" << endl;
   if(node == root){
-    //root->setColor('B');
     return;
   }
   BNode* parent = node->getParent();
